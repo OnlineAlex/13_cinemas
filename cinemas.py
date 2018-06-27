@@ -90,4 +90,5 @@ if __name__ == '__main__':
         movies_rating[movie_title] = fetch_movie_rating(movie_title)
         print(len(movies_rating))
 
-    output_movies_to_console(movies_rating.most_common(10))
+    number_movies = 10
+    output_movies_to_console(movies_rating.most_common(number_movies))
