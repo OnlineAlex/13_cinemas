@@ -18,15 +18,15 @@ def fetch_afisha_page_data(day, page):
         'page': page
     }
     try:
-        r = requests.get(
+        response = requests.get(
             afisha_page,
             params=search_params,
             headers={'Accept': 'application/json'}
         )
     except requests.ConnectionError:
         return None
-    r.encoding = 'utf8'
-    return r.json()
+    response.encoding = 'utf8'
+    return response.json()
 
 
 def get_proxies_list():
@@ -36,8 +36,8 @@ def get_proxies_list():
         'country': 'RU%2C+UA%2C+BY%2C+KZ',
         'token': 'demo'
     }
-    r = requests.get('http://www.freeproxy-list.ru/api/proxy', params=params)
-    return r.content.decode('utf8').splitlines()
+    response = requests.get('http://www.freeproxy-list.ru/api/proxy', params=params)
+    return response.content.decode('utf8').splitlines()
 
 
 def parse_afisha_list(movie_list):
@@ -76,7 +76,7 @@ def output_movies_to_console(movies):
 if __name__ == '__main__':
     print('\nИщу фильмы в прокате')
     today = datetime.datetime.now().strftime('%d-%m-%Y')
-    page_data = fetch_afisha_page_data(today, 1)
+    page_data = fetch_afisha_page_data(today, page=1)
     if page_data is None:
         exit('Нет соеденения. Проверь интернет.')
     movies_title = parse_afisha_list(page_data['MovieList']['Items'])
