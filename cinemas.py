@@ -1,10 +1,6 @@
 import requests
-import collections as cl
 import datetime
 from bs4 import BeautifulSoup
-
-
-PROXY = 'https://192.116.142.153:8080'
 
 
 def fetch_afisha_page_data(day, page):
@@ -36,7 +32,10 @@ def get_proxies_list():
         'country': 'RU%2C+UA%2C+BY%2C+KZ',
         'token': 'demo'
     }
-    response = requests.get('http://www.freeproxy-list.ru/api/proxy', params=params)
+    response = requests.get(
+        'http://www.freeproxy-list.ru/api/proxy',
+        params=params
+    )
     return response.content.decode('utf8').splitlines()
 
 
@@ -48,15 +47,22 @@ def parse_afisha_list(movie_list):
 
 
 def fetch_movie_rating(movie):
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36'
-                             ' (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36'}
+    proxy = 'https://192.116.142.153:8080'  # add your proxy if this does not work
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) '
+                      'AppleWebKit/537.36 (KHTML, like Gecko)'
+                      ' Chrome/54.0.2840.71 Safari/537.36'
+    }
     searching_response = requests.get(
         'https://www.kinopoisk.ru/',
         params={'kp_query': movie.replace(' ', '%20')},
         headers=headers,
-        proxies={'https': PROXY}
+        proxies={'https': proxy}
     )
-    search_page = BeautifulSoup(searching_response.text, 'html.parser')
+    search_page = BeautifulSoup(
+        searching_response.text,
+        'html.parser'
+    )
     try:
         rating = search_page.find(
             'div', {'class': 'most_wanted'}
@@ -84,11 +90,16 @@ if __name__ == '__main__':
     for page_num in range(2, pages_count):
         page_data = fetch_afisha_page_data(today, page_num)
         movies_title += parse_afisha_list(page_data['MovieList']['Items'])
-    print('Фильмов найдено — {}\nПроверяю рейтинги\n'.format(len(movies_title)))
-    movies_rating = cl.Counter()
+    print(
+        'Фильмов найдено — {}\n'
+        'Проверяю рейтинги\n'.format(len(movies_title))
+    )
+    movies_rating = {}
     for movie_title in movies_title:
         movies_rating[movie_title] = fetch_movie_rating(movie_title)
-        print(len(movies_rating))
 
     number_movies = 10
-    output_movies_to_console(movies_rating.most_common(number_movies))
+    output_movies_to_console(sorted(
+        movies_rating.items(),
+        key=lambda film: -film[1]
+    )[:number_movies])
