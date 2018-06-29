@@ -21,22 +21,11 @@ def fetch_afisha_page_data(day, page):
         )
     except requests.ConnectionError:
         return None
+
+    if response.status_code == 404:
+        return 404
     response.encoding = 'utf8'
     return response.json()
-
-
-def get_proxies_list():
-    params = {
-        'anonymity': 'false',
-        'count': 100,
-        'country': 'RU%2C+UA%2C+BY%2C+KZ',
-        'token': 'demo'
-    }
-    response = requests.get(
-        'http://www.freeproxy-list.ru/api/proxy',
-        params=params
-    )
-    return response.content.decode('utf8').splitlines()
 
 
 def parse_afisha_list(movie_list):
@@ -46,8 +35,7 @@ def parse_afisha_list(movie_list):
     return afisha_list
 
 
-def fetch_movie_rating(movie):
-    proxy = 'https://192.116.142.153:8080'  # add your proxy if this does not work
+def fetch_movie_rating(movie, proxy):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) '
                       'AppleWebKit/537.36 (KHTML, like Gecko)'
@@ -80,23 +68,26 @@ def output_movies_to_console(movies):
 
 
 if __name__ == '__main__':
+    proxy = 'https://192.116.142.153:8080'
     print('\nИщу фильмы в прокате')
     today = datetime.datetime.now().strftime('%d-%m-%Y')
-    page_data = fetch_afisha_page_data(today, page=1)
-    if page_data is None:
-        exit('Нет соеденения. Проверь интернет.')
-    movies_title = parse_afisha_list(page_data['MovieList']['Items'])
-    pages_count = page_data['Pager']['PagesCount']+1
-    for page_num in range(2, pages_count):
+    movies_title = []
+    page_num = 1
+    while True:
         page_data = fetch_afisha_page_data(today, page_num)
+        if page_data is None:
+            exit('Нет соеденения. Проверь интернет.')
+        elif page_data == 404:
+            break
         movies_title += parse_afisha_list(page_data['MovieList']['Items'])
+        page_num += 1
     print(
         'Фильмов найдено — {}\n'
         'Проверяю рейтинги\n'.format(len(movies_title))
     )
     movies_rating = {}
     for movie_title in movies_title:
-        movies_rating[movie_title] = fetch_movie_rating(movie_title)
+        movies_rating[movie_title] = fetch_movie_rating(movie_title, proxy)
 
     number_movies = 10
     output_movies_to_console(sorted(
