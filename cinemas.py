@@ -22,8 +22,8 @@ def fetch_afisha_page_data(day, page):
     except requests.ConnectionError:
         return None
 
-    if response.status_code == 404:
-        return 404
+    if not response:
+        return False
     response.encoding = 'utf8'
     return response.json()
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
         page_data = fetch_afisha_page_data(today, page_num)
         if page_data is None:
             exit('Нет соеденения. Проверь интернет.')
-        elif page_data == 404:
+        elif not page_data:
             break
         movies_title += parse_afisha_list(page_data['MovieList']['Items'])
         page_num += 1
